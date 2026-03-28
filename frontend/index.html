@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPECTRAL-KM-NET | Clinical Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i data-lucide="activity" class="logo-icon"></i>
+                <h1>SPECTRE</h1>
+                <p>Clinical Portal</p>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="new-scan">
+                    <i data-lucide="stethoscope" class="nav-icon"></i> New Scan
+                </li>
+                <li data-tab="database">
+                    <i data-lucide="database" class="nav-icon"></i> EHR Database
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-new-patient" class="btn btn-primary">
+                    <i data-lucide="user-plus" class="btn-icon"></i> Start New Patient
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content">
+            <!-- New Scan Tab -->
+            <section id="tab-new-scan" class="tab-content active">
+                <header class="tab-header">
+                    <h2><i data-lucide="scan" style="vertical-align: middle; margin-right: 10px; color: var(--accent);"></i> New Patient Analysis</h2>
+                    <p>Process MRI sequences and generate volumetric insights.</p>
+                </header>
+
+                <div class="main-grid">
+                    <!-- Registry & Upload -->
+                    <div class="card glass registry-card">
+                        <h3>📋 Patient Registry</h3>
+                        <div class="form-group">
+                            <label for="pat_name">Patient Name</label>
+                            <input type="text" id="pat_name" placeholder="Enter Full Name" value="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="pat_id">MRN / Patient ID</label>
+                            <input type="text" id="pat_id" placeholder="GLI-XXXXX-XXX" value="GLI-02547-101">
+                        </div>
+                        <div class="form-group">
+                            <label for="pat_age">Age</label>
+                            <input type="number" id="pat_age" value="45">
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <h3>📂 Case Files</h3>
+                        <p class="helper-text">Upload T1, T1c, T2, FLAIR, and SEG (NIfTI format).</p>
+                        <div id="drop-zone" class="drop-zone">
+                            <i data-lucide="upload-cloud" class="drop-icon"></i>
+                            <p>Drag & drop or Click to upload</p>
+                            <input type="file" id="file_input" multiple hidden>
+                        </div>
+                        <div id="file-list" class="file-list"></div>
+                        
+                        <button id="btn-process" class="btn btn-glow" disabled>
+                            <i data-lucide="cpu" class="btn-icon"></i> Process Volumetrics
+                        </button>
+                    </div>
+
+                    <!-- Analysis Output -->
+                    <div class="card glass analysis-card">
+                        <div id="loading-overlay" class="loading-overlay hidden">
+                            <div class="loader"></div>
+                            <p>Analyzing MRI Sequences...</p>
+                        </div>
+
+                        <div id="analysis-placeholder" class="placeholder">
+                            <i data-lucide="layers" class="placeholder-icon"></i>
+                            <p>Upload files and start analysis to see results.</p>
+                        </div>
+
+                        <div id="analysis-results" class="hidden">
+                            <div class="results-header">
+                                <div class="diagnosis-badge" id="res-diagnosis">Glioblastoma Multiforme</div>
+                                <div class="location-badge" id="res-location">Right Parietal Lobe</div>
+                            </div>
+                            
+                            <div id="3d-viewer" class="viewer-3d"></div>
+                            
+                            <div class="metrics-grid">
+                                <div class="metric-box">
+                                    <span class="label">Total Volume</span>
+                                    <span class="value" id="val-total">28.45 cc</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="label">Active Core</span>
+                                    <span class="value accent-red" id="val-active">4.12 cc</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="label">Fluid (Edema)</span>
+                                    <span class="value accent-green" id="val-edema">24.33 cc</span>
+                                </div>
+                            </div>
+
+                            <div class="report-preview-section">
+                                <h3>📄 Medical Report Preview</h3>
+                                <div id="report-preview-container" class="report-preview-content glass">
+                                    <p style="color: grey; font-style: italic;">Processing report preview...</p>
+                                </div>
+                            </div>
+
+                            <div class="action-footer">
+                                <button id="btn-save-db" class="btn btn-secondary">
+                                    <i data-lucide="save" class="btn-icon"></i> Save to Database
+                                </button>
+                                <button id="btn-download-report" class="btn btn-outline">
+                                    <i data-lucide="file-text" class="btn-icon"></i> Download Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Database Tab -->
+            <section id="tab-database" class="tab-content">
+                <header class="tab-header">
+                    <h2><i data-lucide="server" style="vertical-align: middle; margin-right: 10px; color: var(--accent);"></i> Electronic Health Records</h2>
+                    <p>View global registry and longitudinal patient history.</p>
+                </header>
+
+                <div class="db-controls glass">
+                    <div class="search-box">
+                        <input type="text" id="db-search" placeholder="🔍 Search by Name or MRN...">
+                    </div>
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" data-view="directory">Global Directory</button>
+                        <button class="toggle-btn" data-view="history">Patient History</button>
+                    </div>
+                </div>
+
+                <div id="db-directory" class="db-view card glass active">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient Name</th>
+                                <th>MRN</th>
+                                <th>Diagnosis</th>
+                                <th>Total Vol (cc)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="db-history" class="db-view card glass">
+                    <div class="history-select">
+                        <label>Select Patient MRN:</label>
+                        <select id="history-mrn-select">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="history-grid">
+                        <div class="history-table-container">
+                            <h3>📅 Scan Progression</h3>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Total Vol</th>
+                                        <th>Active Core</th>
+                                        <th>Edema</th>
+                                        <th>Report</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-container">
+                            <h3>📈 Longitudinal Trends</h3>
+                            <div id="progression-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

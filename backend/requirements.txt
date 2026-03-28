@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+nibabel
+numpy
+plotly
+scikit-image
+pandas
+python-multipart
+fpdf2
